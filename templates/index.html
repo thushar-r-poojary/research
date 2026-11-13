@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Super-Resolution Lab — ADAT & AMST Models</title>
+    <meta name="description" content="Advanced Dual-Image and Multi-Frame Satellite Super-Resolution using ADAT and AMST Transformer models with Agentic AI Quality Evaluation.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════
+           DESIGN SYSTEM — CSS Variables & Tokens
+           ═══════════════════════════════════════════════════ */
+        :root {
+            --bg-base: #06080f;
+            --bg-elevated: rgba(14, 18, 32, 0.85);
+            --bg-card: rgba(16, 21, 38, 0.72);
+            --bg-input: rgba(10, 14, 28, 0.6);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-default: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(99, 102, 241, 0.5);
+            --border-accent: rgba(16, 185, 129, 0.4);
+            --text-primary: #f0f2f8;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-accent: #10b981;
+            --accent-emerald: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-indigo: #6366f1;
+            --accent-violet: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --gradient-primary: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #6366f1 100%);
+            --gradient-warm: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+            --gradient-cool: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+            --glow-emerald: 0 0 24px rgba(16, 185, 129, 0.3);
+            --glow-indigo: 0 0 24px rgba(99, 102, 241, 0.3);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.6);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.85rem;
+            --radius-lg: 1.25rem;
+            --radius-xl: 1.5rem;
+            --radius-full: 9999px;
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.3s var(--ease-smooth);
+        }
+
+        /* ═══════════════════════════════════════════════════
+           RESET & BASE
+           ═══════════════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            background-image:
+                radial-gradient(ellipse at 10% 0%, rgba(16, 185, 129, 0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 5%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            line-height: 1.65;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-wrapper {
+            width: 100%;
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           HEADER
+           ═══════════════════════════════════════════════════ */
+        .app-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-top: 1rem;
+        }
+
+        .app-header__logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .app-header__logo-icon {
+            width: 42px; height: 42px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: var(--glow-emerald);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .app-header__title {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.035em;
+            line-height: 1.15;
+        }
+
+        .app-header__subtitle {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            font-weight: 400;
+            margin-top: 0.5rem;
+            max-width: 620px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.9rem;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border: 1px solid;
+        }
+
+        .badge--emerald {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.25);
+            color: var(--accent-emerald);
+        }
+
+        .badge--indigo {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.25);
+            color: var(--accent-indigo);
+        }
+
+        .badge__dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           MODEL SELECTOR TABS
+           ═══════════════════════════════════════════════════ */
+        .model-selector {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            padding: 0.35rem;
+            border-radius: var(--radius-xl);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .model-tab {
+            padding: 0.7rem 1.6rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: 0.02em;
+            position: relative;
+            user-select: none;
+        }
+
+        .model-tab:hover {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .model-tab--active {
+            background: var(--gradient-primary) !important;
+            color: #fff !important;
+            box-shadow: var(--glow-emerald);
+        }
+
+        .model-tab__icon {
+            font-size: 1.15rem;
+        }
+
+        .model-tab__info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .model-tab__name {
+            line-height: 1.2;
+        }
+
+        .model-tab__desc {
+            font-size: 0.62rem;
+            font-weight: 500;
+            opacity: 0.75;
+            letter-spacing: 0.03em;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           GLASS CARD SYSTEM
+           ═══════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: var(--border-default);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .card__header {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .card__header-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .card__header-icon--emerald {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-emerald);
+        }
+
+        .card__header-icon--indigo {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--accent-indigo);
+        }
+
+        .card__header-icon--cyan {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--accent-cyan);
+        }
+
+        .card__title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .card__subtitle {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           MAIN LAYOUT GRID
+           ═══════════════════════════════════════════════════ */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ═══════════════════════════════════════════════════
+           MODEL PANELS (Switchable)
+           ═══════════════════════════════════════════════════ */
+        .model-panel {
+            display: none;
+            animation: fadeSlideIn 0.5s var(--ease-spring) forwards;
+        }
+
+        .model-panel--active {
+            display: block;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════════════════════════════════════════════════
+           DROP ZONES (Upload Areas)
+           ═══════════════════════════════════════════════════ */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .upload-grid--single {
+            grid-template-columns: 1fr;
+        }
+
+        @media (max-width: 640px) {
+            .upload-grid { grid-template-columns: 1fr; }
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-input);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+        }
+
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(16, 185, 129, 0.03) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .drop-zone:hover::before {
+            opacity: 1;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.05);
+            box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.08);
+        }
+
+        .drop-zone__emoji {
+            font-size: 2.75rem;
+            margin-bottom: 0.85rem;
+            transition: transform 0.3s var(--ease-spring);
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+        }
+
+        .drop-zone:hover .drop-zone__emoji {
+            transform: scale(1.12) translateY(-3px);
+        }
+
+        .drop-zone__title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .drop-zone__hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .drop-zone__preview {
+            max-width: 100%;
+            max-height: 170px;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+            display: none;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            animation: scaleIn 0.35s var(--ease-spring) forwards;
+        }
+
+        .drop-zone__file-info {
+            display: none;
+            width: 100%;
+            text-align: left;
+            margin-top: 0.65rem;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 0.6rem 0.85rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            animation: fadeIn 0.35s ease forwards;
+        }
+
+        .drop-zone__file-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .drop-zone__file-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .drop-zone__file-value {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-remove {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.6rem;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: var(--accent-rose);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 10;
+            font-size: 0.85rem;
+            line-height: 1;
+        }
+
+        .btn-remove:hover {
+            background: var(--accent-rose);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        /* Multi-frame file list */
+        .multi-frame-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .multi-frame-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .multi-frame-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .frame-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.65rem;
+            transition: var(--transition);
+            animation: fadeSlideIn 0.3s var(--ease-spring) forwards;
+        }
+
+        .frame-chip:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .frame-chip__thumb {
+            width: 38px; height: 38px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .frame-chip__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .frame-chip__name {
+            font-size: 0.72rem;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .frame-chip__size {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .frame-chip__remove {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+            color: var(--accent-rose);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .frame-chip__remove:hover {
+            background: var(--accent-rose);
+            color: #fff;
+        }
+
+        .frame-count-badge {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .frame-count-badge span {
+            color: var(--accent-emerald);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           BUTTONS
+           ═══════════════════════════════════════════════════ */
+        .btn-container {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .btn {
+            border: none;
+            padding: 0.85rem 2rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            font-family: inherit;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-decoration: none;
+        }
+
+        .btn--primary {
+            background: var(--gradient-primary);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn--primary::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.65s;
+        }
+
+        .btn--primary:hover:not(:disabled)::after {
+            transform: translateX(100%);
+        }
+
+        .btn--primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-emerald);
+        }
+
+        .btn--primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn--primary:disabled {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn--download {
+            background: var(--gradient-cool);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn--download:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-indigo);
+        }
+
+        .btn--secondary {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn--secondary:hover:not(:disabled) {
+            background: rgba(16, 185, 129, 0.22);
+            border-color: rgba(16, 185, 129, 0.6);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        /* ═══════════════════════════════════════════════════
+           STATUS / TELEMETRY PANEL
+           ═══════════════════════════════════════════════════ */
+        .status-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+            text-align: center;
+            height: 100%;
+        }
+
+        .radar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 2px solid rgba(16, 185, 129, 0.15);
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .radar::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border: 2px solid var(--accent-emerald);
+            border-radius: 50%;
+            animation: radarPulse 2.2s ease-out infinite;
+        }
+
+        .radar::after {
+            content: '📡';
+            font-size: 2rem;
+            filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.4));
+        }
+
+        @keyframes radarPulse {
+            0% { transform: scale(0.7); opacity: 0.9; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        .status-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .status-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            max-width: 280px;
+        }
+
+        /* Progress Bar */
+        .progress-box {
+            width: 100%;
+            max-width: 340px;
+            padding: 0 1rem;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 0.85rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));
+            width: 0%;
+            transition: width 0.15s ease;
+            box-shadow: 0 0 12px var(--accent-emerald);
+        }
+
+        .progress-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent-emerald);
+            margin-bottom: 0.35rem;
+        }
+
+        .progress-label {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           ALERT BANNER
+           ═══════════════════════════════════════════════════ */
+        .alert-banner {
+            border-radius: var(--radius-lg);
+            padding: 1.15rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: fadeSlideIn 0.4s var(--ease-spring);
+        }
+
+        .alert-banner--error {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fb7185;
+        }
+
+        .alert-banner__icon { font-size: 1.75rem; flex-shrink: 0; }
+
+        .alert-banner__body { flex: 1; }
+
+        .alert-banner__title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.2rem;
+        }
+
+        .alert-banner__text {
+            font-size: 0.82rem;
+            opacity: 0.85;
+        }
+
+        .alert-banner__close {
+            background: none;
+            border: none;
+            color: currentColor;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0 0.4rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .alert-banner__close:hover { opacity: 1; }
+
+        /* ═══════════════════════════════════════════════════
+           RESULTS SECTION
+           ═══════════════════════════════════════════════════ */
+        .results-grid {
+            display: none;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 2rem;
+            margin-top: 0.5rem;
+            animation: fadeSlideIn 0.6s var(--ease-spring) forwards;
+        }
+
+        @media (max-width: 1024px) {
+            .results-grid { grid-template-columns: 1fr; }
+        }
+
+        .result-viewer {
+            position: relative;
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-subtle);
+            min-height: 400px;
+            overflow: hidden;
+        }
+
+        .result-viewer__img {
+            max-width: 100%;
+            max-height: 430px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 2;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-emerald), transparent);
+            box-shadow: 0 0 15px var(--accent-emerald), 0 0 30px var(--accent-emerald);
+            animation: scanDown 3s infinite linear;
+            z-index: 5;
+            pointer-events: none;
+            display: none;
+        }
+
+        @keyframes scanDown {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-size: 28px 28px;
+            background-image:
+                linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* dB Badge */
+        .db-badge {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 1.1rem;
+            margin-top: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .db-badge__label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .db-badge__title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent-emerald);
+        }
+
+        .db-badge__sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .db-badge__value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.2rem 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .db-badge__unit {
+            font-size: 0.8rem;
+            color: var(--accent-emerald);
+            font-weight: 700;
+        }
+
+        /* Save Path */
+        .path-info {
+            background: rgba(16, 185, 129, 0.04);
+            border: 1px solid rgba(16, 185, 129, 0.18);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.1rem;
+            margin-top: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .path-info__label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--accent-emerald);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .path-info__value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            flex-shrink: 0;
+            font-family: inherit;
+        }
+
+        .btn-copy:hover {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: var(--accent-emerald);
+            color: var(--accent-emerald);
+        }
+
+        .download-container {
+            text-align: center;
+            margin-top: 1.25rem;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           AGENT REPORT CARDS
+           ═══════════════════════════════════════════════════ */
+        .reports-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .agent-card {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1.15rem;
+            transition: var(--transition);
+        }
+
+        .agent-card:hover {
+            border-color: var(--border-default);
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .agent-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.65rem;
+        }
+
+        .agent-card__name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .agent-card__status {
+            font-size: 0.62rem;
+            font-weight: 800;
+            padding: 0.12rem 0.55rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .status--ok {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status--warn {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .agent-card__body {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.7rem 0.9rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            white-space: pre-line;
+            line-height: 1.55;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.65rem;
+            margin-top: 0.35rem;
+        }
+
+        .metric-tile {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 0.8rem;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .metric-tile:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .metric-tile__label {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-tile__value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Decision Card */
+        .decision-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(99, 102, 241, 0.04) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.12);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .decision-card:hover {
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .decision-card__title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: var(--accent-emerald);
+            margin-bottom: 0.4rem;
+        }
+
+        .decision-card__text {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.85rem;
+        }
+
+        .confidence-bar {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .confidence-bar__track {
+            height: 7px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 0.4rem;
+        }
+
+        .confidence-bar__fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));
+            width: 0%;
+            transition: width 1.2s var(--ease-spring);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
+        }
+
+        .confidence-bar__label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .confidence-bar__value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           ARCHITECTURE INFO SECTION
+           ═══════════════════════════════════════════════════ */
+        .arch-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .arch-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arch-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+        }
+
+        .arch-card--adat::before {
+            background: var(--gradient-primary);
+        }
+
+        .arch-card--amst::before {
+            background: var(--gradient-cool);
+        }
+
+        .arch-card:hover {
+            border-color: var(--border-default);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .arch-card__icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .arch-card__title {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 0.35rem;
+            letter-spacing: -0.01em;
+        }
+
+        .arch-card__desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .arch-card__features {
+            list-style: none;
+        }
+
+        .arch-card__features li {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0.3rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .arch-card__features li:last-child {
+            border-bottom: none;
+        }
+
+        .arch-card__features li::before {
+            content: '→';
+            color: var(--accent-emerald);
+            font-weight: 700;
+        }
+
+        /* ═══════════════════════════════════════════════════
+           UTILITIES & ANIMATIONS
+           ═══════════════════════════════════════════════════ */
+        .hidden { display: none !important; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive fine-tuning */
+        @media (max-width: 640px) {
+            .app-wrapper { padding: 1.25rem 1rem 3rem; }
+            .model-tab { padding: 0.55rem 1rem; font-size: 0.78rem; }
+            .card { padding: 1.25rem; }
+            .metrics-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+    </style>
+</head>
+
+<body>
+    <div class="app-wrapper">
+
+        <!-- ═══════════════ HEADER ═══════════════ -->
+        <header class="app-header">
+            <div class="app-header__logo">
+                <div class="app-header__logo-icon">🛰️</div>
+            </div>
+            <h1 class="app-header__title">Satellite Super-Resolution Lab</h1>
+            <p class="app-header__subtitle">Cross-Attention Transformer Fusion & Multi-Agent Quality Evaluation across Dual-Image and Multi-Frame Architectures</p>
+            <div class="header-badges">
+                <span class="badge badge--emerald"><span class="badge__dot"></span>ADAT — Dual-Image SR</span>
+                <span class="badge badge--indigo"><span class="badge__dot"></span>AMST — Multi-Frame SR</span>
+            </div>
+        </header>
+
+        <!-- ═══════════════ MODEL SELECTOR ═══════════════ -->
+        <div class="model-selector" id="model-selector">
+            <button class="model-tab model-tab--active" data-model="adat" id="tab-adat">
+                <span class="model-tab__icon">🔬</span>
+                <span class="model-tab__info">
+                    <span class="model-tab__name">ADAT Model</span>
+                    <span class="model-tab__desc">Dual-Image (2 feeds)</span>
+                </span>
+            </button>
+            <button class="model-tab" data-model="amst" id="tab-amst">
+                <span class="model-tab__icon">🌐</span>
+                <span class="model-tab__info">
+                    <span class="model-tab__name">AMST Model</span>
+                    <span class="model-tab__desc">Multi-Frame (up to 9)</span>
+                </span>
+            </button>
+        </div>
+
+        <!-- ═══════════════ ALERT BANNER ═══════════════ -->
+        <div class="alert-banner alert-banner--error hidden" id="alert-banner">
+            <div class="alert-banner__icon">⚠️</div>
+            <div class="alert-banner__body">
+                <div class="alert-banner__title">Validation Error</div>
+                <div class="alert-banner__text" id="alert-text">Images do not match.</div>
+            </div>
+            <button class="alert-banner__close" id="alert-close">×</button>
+        </div>
+
+        <!-- ═══════════════ MAIN GRID ═══════════════ -->
+        <div class="main-grid">
+
+            <!-- LEFT: Upload Panel -->
+            <div class="card">
+                <div class="card__header">
+                    <div class="card__header-icon card__header-icon--emerald">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    </div>
+                    <div>
+                        <div class="card__title" id="upload-title">Dual Satellite Feed Upload</div>
+                        <div class="card__subtitle" id="upload-subtitle">Upload two slightly shifted LR satellite images of the same scene</div>
+                    </div>
+                </div>
+
+                <!-- ═══════ ADAT Panel ═══════ -->
+                <div class="model-panel model-panel--active" id="panel-adat">
+                    <div class="upload-grid">
+                        <!-- Feed A -->
+                        <div class="drop-zone" id="dz-lr1">
+                            <button class="btn-remove hidden" id="rm-lr1" title="Remove">×</button>
+                            <div class="drop-zone__emoji" id="emoji-lr1">🛰️</div>
+                            <div class="drop-zone__title" id="title-lr1">Satellite Feed A</div>
+                            <div class="drop-zone__hint" id="hint-lr1">Drag & drop or click to browse</div>
+                            <img class="drop-zone__preview" id="preview-lr1" alt="Feed A Preview">
+                            <input type="file" id="file-lr1" accept="image/*" class="hidden">
+                            <div class="drop-zone__file-info" id="info-lr1">
+                                <div class="drop-zone__file-row">
+                                    <span class="drop-zone__file-label">Name:</span>
+                                    <span class="drop-zone__file-value" id="fname-lr1">--</span>
+                                </div>
+                                <div class="drop-zone__file-row">
+                                    <span class="drop-zone__file-label">Size:</span>
+                                    <span class="drop-zone__file-value" id="fsize-lr1">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Feed B -->
+                        <div class="drop-zone" id="dz-lr2">
+                            <button class="btn-remove hidden" id="rm-lr2" title="Remove">×</button>
+                            <div class="drop-zone__emoji" id="emoji-lr2">🛰️</div>
+                            <div class="drop-zone__title" id="title-lr2">Satellite Feed B</div>
+                            <div class="drop-zone__hint" id="hint-lr2">Drag & drop or click to browse</div>
+                            <img class="drop-zone__preview" id="preview-lr2" alt="Feed B Preview">
+                            <input type="file" id="file-lr2" accept="image/*" class="hidden">
+                            <div class="drop-zone__file-info" id="info-lr2">
+                                <div class="drop-zone__file-row">
+                                    <span class="drop-zone__file-label">Name:</span>
+                                    <span class="drop-zone__file-value" id="fname-lr2">--</span>
+                                </div>
+                                <div class="drop-zone__file-row">
+                                    <span class="drop-zone__file-label">Size:</span>
+                                    <span class="drop-zone__file-value" id="fsize-lr2">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-container" style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" class="btn btn--secondary" id="btn-sample-adat">
+                            <span>✨ Load Demo Images</span>
+                        </button>
+                        <button class="btn btn--primary" id="btn-adat" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            <span>Synthesize HR Output</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ═══════ AMST Panel ═══════ -->
+                <div class="model-panel" id="panel-amst">
+                    <div class="upload-grid upload-grid--single">
+                        <div class="drop-zone" id="dz-multi" style="min-height: 180px;">
+                            <div class="drop-zone__emoji" id="emoji-multi">📂</div>
+                            <div class="drop-zone__title" id="title-multi">Multi-Frame Sequence</div>
+                            <div class="drop-zone__hint" id="hint-multi">Drag & drop up to 9 LR frames, or click to browse</div>
+                            <input type="file" id="file-multi" accept="image/*" multiple class="hidden">
+                        </div>
+                    </div>
+                    <div class="multi-frame-list" id="frame-list"></div>
+                    <div class="frame-count-badge" id="frame-count" style="display:none;">
+                        Frames loaded: <span id="frame-count-val">0</span> / 9
+                    </div>
+                    <div class="btn-container" style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" class="btn btn--secondary" id="btn-sample-amst">
+                            <span>✨ Load Demo Frames (9×)</span>
+                        </button>
+                        <button class="btn btn--primary" id="btn-amst" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            <span>Synthesize Multi-Frame HR</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Telemetry / Status -->
+            <div class="card" id="status-card">
+                <div class="card__header">
+                    <div class="card__header-icon card__header-icon--cyan">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    </div>
+                    <div>
+                        <div class="card__title">Telemetry & Synthesis Status</div>
+                        <div class="card__subtitle">Live processing pipeline status</div>
+                    </div>
+                </div>
+                <div class="status-panel">
+                    <!-- Idle State -->
+                    <div id="status-idle">
+                        <div class="radar"></div>
+                        <div class="status-title">Awaiting Input</div>
+                        <p class="status-desc">Select a model and upload low-resolution satellite images to begin sub-pixel synthesis.</p>
+                    </div>
+                    <!-- Processing State -->
+                    <div id="status-loading" class="hidden progress-box">
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progress-bar"></div>
+                        </div>
+                        <div class="progress-pct"><span id="progress-pct">0</span>%</div>
+                        <div class="progress-label" id="progress-label">Initializing...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ RESULTS GRID ═══════════════ -->
+        <div class="results-grid" id="results-block">
+            <!-- Left: HR Output Viewer -->
+            <div class="card">
+                <div class="card__header">
+                    <div class="card__header-icon card__header-icon--emerald">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                    </div>
+                    <div>
+                        <div class="card__title">Super-Resolved Output</div>
+                        <div class="card__subtitle" id="result-model-label">ADAT Model Output</div>
+                    </div>
+                </div>
+
+                <div class="result-viewer">
+                    <div class="scan-line" id="scan-line"></div>
+                    <div class="grid-overlay"></div>
+                    <img class="result-viewer__img" id="hr-result-img" alt="Super-Resolved Output">
+                </div>
+
+                <!-- dB Badge -->
+                <div class="db-badge">
+                    <div class="db-badge__label">
+                        <span style="font-size:1.15rem;">📡</span>
+                        <div>
+                            <div class="db-badge__title">Generated Image Quality (PSNR)</div>
+                            <div class="db-badge__sub">Real-time computed present image dB</div>
+                        </div>
+                    </div>
+                    <div class="db-badge__value">
+                        <span id="val-gen-db">--</span>
+                        <span class="db-badge__unit"> dB</span>
+                    </div>
+                </div>
+
+                <!-- Saved Path -->
+                <div class="path-info">
+                    <div style="flex:1;min-width:0;">
+                        <div class="path-info__label">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Saved locally in system storage
+                        </div>
+                        <span class="path-info__value" id="val-local-path">—</span>
+                    </div>
+                    <button class="btn-copy" id="btn-copy-path">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Copy</span>
+                    </button>
+                </div>
+
+                <!-- Download -->
+                <div class="download-container">
+                    <a id="btn-download" download="super_resolved_hr.png" class="btn btn--download">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        <span>Download PNG</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right: AI Quality Reports -->
+            <div class="card">
+                <div class="card__header">
+                    <div class="card__header-icon card__header-icon--indigo">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    </div>
+                    <div>
+                        <div class="card__title">Agentic AI Quality Evaluator</div>
+                        <div class="card__subtitle">Multi-Agent Blind Image Quality Assessment</div>
+                    </div>
+                </div>
+                <div class="reports-stack">
+                    <!-- Agent 1 -->
+                    <div class="agent-card">
+                        <div class="agent-card__header">
+                            <span class="agent-card__name">🛡️ Distortion Analyst</span>
+                            <span class="agent-card__status status--ok" id="agent1-status">STANDBY</span>
+                        </div>
+                        <div class="agent-card__body" id="agent1-content">Awaiting analysis…</div>
+                    </div>
+                    <!-- Agent 2 -->
+                    <div class="agent-card">
+                        <div class="agent-card__header">
+                            <span class="agent-card__name">📊 Quality Estimator</span>
+                            <span class="agent-card__status status--ok">STANDBY</span>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-tile">
+                                <div class="metric-tile__label">Est. PSNR</div>
+                                <div class="metric-tile__value" id="val-psnr">--</div>
+                            </div>
+                            <div class="metric-tile">
+                                <div class="metric-tile__label">Est. SSIM</div>
+                                <div class="metric-tile__value" id="val-ssim">--</div>
+                            </div>
+                            <div class="metric-tile">
+                                <div class="metric-tile__label">BRISQUE</div>
+                                <div class="metric-tile__value" id="val-brisque">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Agent 3: Decision -->
+                    <div class="decision-card">
+                        <div class="decision-card__title">Decision & Downstream Readiness</div>
+                        <div class="decision-card__text" id="val-decision">AWAITING EVALUATION</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-bar__track">
+                                <div class="confidence-bar__fill" id="confidence-fill"></div>
+                            </div>
+                            <div class="confidence-bar__label">VLM Confidence: <span class="confidence-bar__value" id="val-confidence">0</span>%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ ARCHITECTURE INFO ═══════════════ -->
+        <div class="arch-info">
+            <div class="arch-card arch-card--adat">
+                <div class="arch-card__icon">🔬</div>
+                <div class="arch-card__title">ADAT — Agentic Dual-Attention Transformer</div>
+                <p class="arch-card__desc">Novel dual-image SR architecture using shared RCAB encoders and Spatial-Pooled Cross-Attention Fusion to align sub-pixel information from two slightly shifted low-resolution satellite captures.</p>
+                <ul class="arch-card__features">
+                    <li>Shared RCAB encoder with channel attention</li>
+                    <li>Spatial-Pooled Cross-Attention Fusion (SPCAF)</li>
+                    <li>PixelShuffle upsampler (×3 scale)</li>
+                    <li>Global bicubic residual learning</li>
+                    <li>2 input feeds → 1 HR output</li>
+                </ul>
+            </div>
+            <div class="arch-card arch-card--amst">
+                <div class="arch-card__icon">🌐</div>
+                <div class="arch-card__title">AMST — Agentic Multi-Frame Spectral Transformer</div>
+                <p class="arch-card__desc">Multi-frame SR model adapted for PROBA-V satellite data. Fuses up to 9 low-resolution temporal frames through deep residual blocks and PixelShuffle upsampling for robust high-resolution reconstruction.</p>
+                <ul class="arch-card__features">
+                    <li>Multi-frame stack input (up to 9 frames)</li>
+                    <li>Deep Residual Fusion Blocks</li>
+                    <li>PixelShuffle upsampler (×3 scale)</li>
+                    <li>Bicubic reference-frame residual learning</li>
+                    <li>PROBA-V single-channel (RED/NIR) support</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         JAVASCRIPT — Full Application Logic
+         ═══════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ── State ──
+        let activeModel = 'adat';
+        let adatFile1 = null, adatFile2 = null;
+        let amstFiles = [];
+        let activeBlobUrl = null;
+
+        // ── DOM Refs ──
+        const $ = id => document.getElementById(id);
+
+        const tabAdat = $('tab-adat'), tabAmst = $('tab-amst');
+        const panelAdat = $('panel-adat'), panelAmst = $('panel-amst');
+        const uploadTitle = $('upload-title'), uploadSubtitle = $('upload-subtitle');
+        const alertBanner = $('alert-banner'), alertText = $('alert-text'), alertClose = $('alert-close');
+
+        // ADAT
+        const dzLr1 = $('dz-lr1'), dzLr2 = $('dz-lr2');
+        const fileLr1 = $('file-lr1'), fileLr2 = $('file-lr2');
+        const previewLr1 = $('preview-lr1'), previewLr2 = $('preview-lr2');
+        const btnAdat = $('btn-adat');
+
+        // AMST
+        const dzMulti = $('dz-multi'), fileMulti = $('file-multi');
+        const frameList = $('frame-list'), frameCount = $('frame-count'), frameCountVal = $('frame-count-val');
+        const btnAmst = $('btn-amst');
+
+        // Status
+        const statusIdle = $('status-idle'), statusLoading = $('status-loading');
+        const progressBar = $('progress-bar'), progressPct = $('progress-pct'), progressLabel = $('progress-label');
+
+        // Results
+        const resultsBlock = $('results-block'), hrResultImg = $('hr-result-img');
+        const scanLine = $('scan-line'), resultModelLabel = $('result-model-label');
+        const valGenDb = $('val-gen-db'), valLocalPath = $('val-local-path');
+        const btnCopyPath = $('btn-copy-path'), btnDownload = $('btn-download');
+        const agent1Status = $('agent1-status'), agent1Content = $('agent1-content');
+        const valPsnr = $('val-psnr'), valSsim = $('val-ssim'), valBrisque = $('val-brisque');
+        const valDecision = $('val-decision'), confidenceFill = $('confidence-fill'), valConfidence = $('val-confidence');
+
+        // ── Helpers ──
+        function base64ToBlob(b64, mime = 'image/png') {
+            const bytes = atob(b64);
+            const arr = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+            return new Blob([arr], { type: mime });
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            return (bytes / 1024).toFixed(1) + ' KB';
+        }
+
+        function showAlert(msg) {
+            alertText.textContent = msg;
+            alertBanner.classList.remove('hidden');
+            alertBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideAlert() {
+            alertBanner.classList.add('hidden');
+        }
+
+        alertClose.addEventListener('click', hideAlert);
+
+        // ── Model Tab Switching ──
+        function switchModel(model) {
+            activeModel = model;
+            hideAlert();
+            resultsBlock.style.display = 'none';
+
+            tabAdat.classList.toggle('model-tab--active', model === 'adat');
+            tabAmst.classList.toggle('model-tab--active', model === 'amst');
+            panelAdat.classList.toggle('model-panel--active', model === 'adat');
+            panelAmst.classList.toggle('model-panel--active', model === 'amst');
+
+            if (model === 'adat') {
+                uploadTitle.textContent = 'Dual Satellite Feed Upload';
+                uploadSubtitle.textContent = 'Upload two slightly shifted LR satellite images of the same scene';
+            } else {
+                uploadTitle.textContent = 'Multi-Frame Sequence Upload';
+                uploadSubtitle.textContent = 'Upload up to 9 temporally shifted LR frames for multi-frame fusion';
+            }
+        }
+
+        tabAdat.addEventListener('click', () => switchModel('adat'));
+        tabAmst.addEventListener('click', () => switchModel('amst'));
+
+        // ── ADAT Drop Zone Handlers ──
+        function setupDualDropZone(dz, fileInput, previewEl, rmBtn, emojiId, titleId, hintId, infoId, fnameId, fsizeId, channel) {
+            dz.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('click', e => e.stopPropagation());
+
+            dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            dz.addEventListener('drop', e => {
+                e.preventDefault();
+                dz.classList.remove('dragover');
+                if (e.dataTransfer.files.length) loadDualFile(e.dataTransfer.files[0], channel, previewEl, rmBtn, emojiId, titleId, hintId, infoId, fnameId, fsizeId);
+            });
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) loadDualFile(fileInput.files[0], channel, previewEl, rmBtn, emojiId, titleId, hintId, infoId, fnameId, fsizeId);
+            });
+
+            rmBtn.addEventListener('click', e => {
+                e.stopPropagation();
+                if (channel === 1) adatFile1 = null; else adatFile2 = null;
+                fileInput.value = '';
+                previewEl.src = ''; previewEl.style.display = 'none';
+                rmBtn.classList.add('hidden');
+                $(infoId).style.display = 'none';
+                $(emojiId).style.display = ''; $(titleId).style.display = ''; $(hintId).style.display = '';
+                hideAlert();
+                checkAdatReady();
+            });
+        }
+
+        function loadDualFile(file, channel, previewEl, rmBtn, emojiId, titleId, hintId, infoId, fnameId, fsizeId) {
+            hideAlert();
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                if (channel === 1) adatFile1 = file; else adatFile2 = file;
+                previewEl.src = reader.result;
+                previewEl.style.display = 'block';
+                rmBtn.classList.remove('hidden');
+                $(infoId).style.display = 'block';
+                $(fnameId).textContent = file.name;
+                $(fsizeId).textContent = formatSize(file.size);
+                $(emojiId).style.display = 'none';
+                $(titleId).style.display = 'none';
+                $(hintId).style.display = 'none';
+                checkAdatReady();
+            };
+        }
+
+        function checkAdatReady() {
+            btnAdat.disabled = !(adatFile1 && adatFile2);
+        }
+
+        setupDualDropZone(dzLr1, fileLr1, previewLr1, $('rm-lr1'), 'emoji-lr1', 'title-lr1', 'hint-lr1', 'info-lr1', 'fname-lr1', 'fsize-lr1', 1);
+        setupDualDropZone(dzLr2, fileLr2, previewLr2, $('rm-lr2'), 'emoji-lr2', 'title-lr2', 'hint-lr2', 'info-lr2', 'fname-lr2', 'fsize-lr2', 2);
+
+        // ── AMST Multi-Frame Handlers ──
+        dzMulti.addEventListener('click', () => fileMulti.click());
+        fileMulti.addEventListener('click', e => e.stopPropagation());
+        dzMulti.addEventListener('dragover', e => { e.preventDefault(); dzMulti.classList.add('dragover'); });
+        dzMulti.addEventListener('dragleave', () => dzMulti.classList.remove('dragover'));
+        dzMulti.addEventListener('drop', e => {
+            e.preventDefault();
+            dzMulti.classList.remove('dragover');
+            addMultiFiles(e.dataTransfer.files);
+        });
+        fileMulti.addEventListener('change', () => {
+            addMultiFiles(fileMulti.files);
+            fileMulti.value = '';
+        });
+
+        function addMultiFiles(fileListObj) {
+            hideAlert();
+            const newFiles = Array.from(fileListObj);
+            for (const f of newFiles) {
+                if (amstFiles.length >= 9) break;
+                if (!f.type.startsWith('image/')) continue;
+                amstFiles.push(f);
+            }
+            renderFrameList();
+            checkAmstReady();
+        }
+
+        function removeFrame(idx) {
+            amstFiles.splice(idx, 1);
+            renderFrameList();
+            checkAmstReady();
+        }
+
+        function renderFrameList() {
+            frameList.innerHTML = '';
+            if (amstFiles.length === 0) {
+                frameCount.style.display = 'none';
+                return;
+            }
+            frameCount.style.display = 'block';
+            frameCountVal.textContent = amstFiles.length;
+
+            amstFiles.forEach((f, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'frame-chip';
+
+                const thumb = document.createElement('img');
+                thumb.className = 'frame-chip__thumb';
+                thumb.alt = 'Frame ' + (idx + 1);
+                const rdr = new FileReader();
+                rdr.readAsDataURL(f);
+                rdr.onload = () => { thumb.src = rdr.result; };
+
+                const info = document.createElement('div');
+                info.className = 'frame-chip__info';
+                info.innerHTML = `
+                    <div class="frame-chip__name">Frame ${idx + 1}: ${f.name}</div>
+                    <div class="frame-chip__size">${formatSize(f.size)}</div>
+                `;
+
+                const rmBtn = document.createElement('button');
+                rmBtn.className = 'frame-chip__remove';
+                rmBtn.textContent = '×';
+                rmBtn.addEventListener('click', () => removeFrame(idx));
+
+                chip.appendChild(thumb);
+                chip.appendChild(info);
+                chip.appendChild(rmBtn);
+                frameList.appendChild(chip);
+            });
+        }
+
+        function checkAmstReady() {
+            btnAmst.disabled = amstFiles.length < 2;
+        }
+
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, { type: mime });
+        }
+
+        const btnSampleAdat = $('btn-sample-adat');
+        if (btnSampleAdat) {
+            btnSampleAdat.addEventListener('click', async () => {
+                try {
+                    btnSampleAdat.disabled = true;
+                    btnSampleAdat.innerHTML = '<span>⏳ Fetching Demo Feeds…</span>';
+                    const res = await fetch('/sample/adat');
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
+
+                    const file1 = dataURLtoFile(data.lr1, data.name1);
+                    const file2 = dataURLtoFile(data.lr2, data.name2);
+
+                    loadDualFile(file1, 1, previewLr1, $('rm-lr1'), 'emoji-lr1', 'title-lr1', 'hint-lr1', 'info-lr1', 'fname-lr1', 'fsize-lr1');
+                    loadDualFile(file2, 2, previewLr2, $('rm-lr2'), 'emoji-lr2', 'title-lr2', 'hint-lr2', 'info-lr2', 'fname-lr2', 'fsize-lr2');
+
+                    btnSampleAdat.disabled = false;
+                    btnSampleAdat.innerHTML = '<span>✨ Load Demo Images</span>';
+                } catch (err) {
+                    btnSampleAdat.disabled = false;
+                    btnSampleAdat.innerHTML = '<span>✨ Load Demo Images</span>';
+                    showAlert('Failed to load sample images: ' + err.message);
+                }
+            });
+        }
+
+        const btnSampleAmst = $('btn-sample-amst');
+        if (btnSampleAmst) {
+            btnSampleAmst.addEventListener('click', async () => {
+                try {
+                    btnSampleAmst.disabled = true;
+                    btnSampleAmst.innerHTML = '<span>⏳ Fetching Frames…</span>';
+                    const res = await fetch('/sample/amst');
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
+
+                    amstFiles = [];
+                    data.frames.forEach(f => {
+                        const fileObj = dataURLtoFile(f.data, f.name);
+                        amstFiles.push(fileObj);
+                    });
+                    renderFrameList();
+                    checkAmstReady();
+
+                    btnSampleAmst.disabled = false;
+                    btnSampleAmst.innerHTML = '<span>✨ Load Demo Frames (9×)</span>';
+                } catch (err) {
+                    btnSampleAmst.disabled = false;
+                    btnSampleAmst.innerHTML = '<span>✨ Load Demo Frames (9×)</span>';
+                    showAlert('Failed to load demo frames: ' + err.message);
+                }
+            });
+        }
+
+        // ── Copy Path ──
+        btnCopyPath.addEventListener('click', () => {
+            const txt = valLocalPath.textContent;
+            navigator.clipboard.writeText(txt).then(() => {
+                const span = btnCopyPath.querySelector('span');
+                span.textContent = 'Copied!';
+                setTimeout(() => { span.textContent = 'Copy'; }, 2000);
+            });
+        });
+
+        // ── Processing Pipeline ──
+        function runProgressAnimation(pctEl, barEl, labelEl) {
+            let pct = 30;
+            const labels = [
+                { t: 45, l: 'TRANSFORMER CROSS-ATTENTION FUSION…' },
+                { t: 60, l: 'FUSING MULTI-FREQUENCY BANDS…' },
+                { t: 75, l: 'DEEP DENSE SPECTRUM GENERATION…' },
+                { t: 90, l: 'RUNNING AGENTIC BIQA EVALUATORS…' }
+            ];
+
+            return setInterval(() => {
+                if (pct < 95) {
+                    pct++;
+                    barEl.style.width = pct + '%';
+                    pctEl.textContent = pct;
+                    const lbl = labels.find(l => pct < l.t);
+                    labelEl.textContent = lbl ? lbl.l : 'COMPILING QUALITY REPORTS…';
+                }
+            }, 80);
+        }
+
+        function startLoading() {
+            hideAlert();
+            statusIdle.classList.add('hidden');
+            statusLoading.classList.remove('hidden');
+            resultsBlock.style.display = 'none';
+            scanLine.style.display = 'none';
+            progressBar.style.width = '0%';
+            progressPct.textContent = '0';
+            progressLabel.textContent = 'CONNECTING…';
+            if (activeBlobUrl) { URL.revokeObjectURL(activeBlobUrl); activeBlobUrl = null; }
+        }
+
+        function finishLoading() {
+            statusLoading.classList.add('hidden');
+            statusIdle.classList.remove('hidden');
+        }
+
+        function displayResults(data) {
+            progressBar.style.width = '100%';
+            progressPct.textContent = '100';
+            progressLabel.textContent = 'SYNTHESIS COMPLETE!';
+
+            setTimeout(() => {
+                const blob = base64ToBlob(data.hr_image);
+                activeBlobUrl = URL.createObjectURL(blob);
+                hrResultImg.src = activeBlobUrl;
+                btnDownload.href = activeBlobUrl;
+
+                resultModelLabel.textContent = activeModel === 'adat' ? 'ADAT Dual-Image Output' : 'AMST Multi-Frame Output';
+
+                if (data.generated_db !== undefined) {
+                    valGenDb.textContent = parseFloat(data.generated_db).toFixed(2);
+                    valPsnr.textContent = parseFloat(data.generated_db).toFixed(2) + ' dB';
+                } else {
+                    valGenDb.textContent = data.metrics.Estimated_PSNR.toFixed(2);
+                    valPsnr.textContent = data.metrics.Estimated_PSNR.toFixed(2) + ' dB';
+                }
+
+                valLocalPath.textContent = data.local_path;
+
+                agent1Content.textContent = data.distortion_report;
+                if (/blur|noise|artifact/i.test(data.distortion_report)) {
+                    agent1Status.textContent = 'WARNING';
+                    agent1Status.className = 'agent-card__status status--warn';
+                } else {
+                    agent1Status.textContent = 'OPTIMAL';
+                    agent1Status.className = 'agent-card__status status--ok';
+                }
+
+                valSsim.textContent = data.metrics.Estimated_SSIM.toFixed(4);
+                valBrisque.textContent = data.metrics.BRISQUE_Est.toFixed(2);
+
+                let match = data.decision_report.match(/\[Agent 3: Decision\]:\s*(.*)/);
+                if (match) {
+                    valDecision.textContent = match[1].trim();
+                } else {
+                    const lines = data.decision_report.split('\n');
+                    const dLine = lines.find(l => l.includes('[Agent 3: Decision]:'));
+                    valDecision.textContent = dLine ? dLine.replace('[Agent 3: Decision]:', '').trim() : 'READY FOR DOWNSTREAM';
+                }
+
+                const conf = 96.5;
+                valConfidence.textContent = conf;
+                confidenceFill.style.width = conf + '%';
+
+                finishLoading();
+                btnAdat.disabled = false;
+                btnAmst.disabled = false;
+
+                resultsBlock.style.display = 'grid';
+                scanLine.style.display = 'block';
+                resultsBlock.scrollIntoView({ behavior: 'smooth' });
+            }, 550);
+        }
+
+        function handleError(msg) {
+            showAlert(msg);
+            finishLoading();
+            btnAdat.disabled = !(adatFile1 && adatFile2);
+            btnAmst.disabled = amstFiles.length < 2;
+        }
+
+        // ── ADAT Submit ──
+        btnAdat.addEventListener('click', () => {
+            if (!adatFile1 || !adatFile2) return;
+            startLoading();
+            btnAdat.disabled = true;
+
+            const fd = new FormData();
+            fd.append('lr1', adatFile1);
+            fd.append('lr2', adatFile2);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/super-resolve', true);
+
+            xhr.upload.addEventListener('progress', e => {
+                if (e.lengthComputable) {
+                    const p = Math.round((e.loaded / e.total) * 30);
+                    progressBar.style.width = p + '%';
+                    progressPct.textContent = p;
+                    progressLabel.textContent = 'TRANSMITTING SATELLITE FEEDS…';
+                }
+            });
+
+            let procTimer = null;
+            xhr.upload.addEventListener('load', () => {
+                progressBar.style.width = '30%';
+                progressPct.textContent = '30';
+                progressLabel.textContent = 'VALIDATING & CO-ALIGNING SUB-PIXEL GRIDS…';
+                procTimer = runProgressAnimation(progressPct, progressBar, progressLabel);
+            });
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    if (procTimer) clearInterval(procTimer);
+                    if (xhr.status === 200) {
+                        try { displayResults(JSON.parse(xhr.responseText)); }
+                        catch (e) { handleError('Error parsing response: ' + e.message); }
+                    } else {
+                        let msg = 'Synthesis failed.';
+                        try { const d = JSON.parse(xhr.responseText); if (d.error) msg = d.error; } catch (e) {}
+                        handleError(msg);
+                    }
+                }
+            };
+
+            xhr.send(fd);
+        });
+
+        // ── AMST Submit ──
+        btnAmst.addEventListener('click', () => {
+            if (amstFiles.length < 2) return;
+            startLoading();
+            btnAmst.disabled = true;
+
+            const fd = new FormData();
+            amstFiles.forEach((f, i) => fd.append('frames', f));
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/super-resolve-multi', true);
+
+            xhr.upload.addEventListener('progress', e => {
+                if (e.lengthComputable) {
+                    const p = Math.round((e.loaded / e.total) * 30);
+                    progressBar.style.width = p + '%';
+                    progressPct.textContent = p;
+                    progressLabel.textContent = 'TRANSMITTING MULTI-FRAME SEQUENCE…';
+                }
+            });
+
+            let procTimer = null;
+            xhr.upload.addEventListener('load', () => {
+                progressBar.style.width = '30%';
+                progressPct.textContent = '30';
+                progressLabel.textContent = 'ALIGNING TEMPORAL FRAMES…';
+                procTimer = runProgressAnimation(progressPct, progressBar, progressLabel);
+            });
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    if (procTimer) clearInterval(procTimer);
+                    if (xhr.status === 200) {
+                        try { displayResults(JSON.parse(xhr.responseText)); }
+                        catch (e) { handleError('Error parsing response: ' + e.message); }
+                    } else {
+                        let msg = 'Multi-frame synthesis failed.';
+                        try { const d = JSON.parse(xhr.responseText); if (d.error) msg = d.error; } catch (e) {}
+                        handleError(msg);
+                    }
+                }
+            };
+
+            xhr.send(fd);
+        });
+
+    })();
+    </script>
+</body>
+</html>

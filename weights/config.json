@@ -1,0 +1,7 @@
+{
+    "model": "adat",
+    "scale": 3,
+    "embed_dim": 16,
+    "num_encoder_blocks": 2,
+    "num_blocks": null
+}

@@ -1,0 +1,16 @@
+[  1/10] imgset0000 -> True PSNR: 23.35 dB  True SSIM: 0.6866
+[  2/10] imgset0001 -> True PSNR: 24.92 dB  True SSIM: 0.8998
+[  3/10] imgset0002 -> True PSNR: 31.52 dB  True SSIM: 0.7104
+[  4/10] imgset0003 -> True PSNR: 26.20 dB  True SSIM: 0.7968
+[  5/10] imgset0004 -> True PSNR: 29.79 dB  True SSIM: 0.9368
+[  6/10] imgset0005 -> True PSNR: 23.62 dB  True SSIM: 0.9122
+[  7/10] imgset0006 -> True PSNR: 26.67 dB  True SSIM: 0.9443
+[  8/10] imgset0007 -> True PSNR: 30.13 dB  True SSIM: 0.8753
+[  9/10] imgset0008 -> True PSNR: 26.72 dB  True SSIM: 0.7597
+[ 10/10] imgset0009 -> True PSNR: 26.20 dB  True SSIM: 0.7365
+
+
+PROBA-V Dataset Summary (ADAT):
+Evaluated Scenes: 10
+Average True PSNR: 26.91 dB
+Average True SSIM: 0.8258
