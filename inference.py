@@ -9,18 +9,15 @@ import argparse
 from models.adat import ADAT
 from evaluation.agentic_eval import AgenticEvaluator
 import json
+import numpy as np
+from enhancer import SatelliteEnhancer
 
 def process_image(img_path):
-    """Load an image and convert to tensor. Falls back to random tensor if file missing."""
+    """Load an image as PIL Image."""
     if not os.path.exists(img_path):
-        print(f"Warning: {img_path} not found. Using a random tensor proxy.")
-        return torch.rand(1, 3, 64, 64)
-
-    img = Image.open(img_path).convert('RGB')
-    transform = transforms.Compose([
-        transforms.ToTensor()
-    ])
-    return transform(img).unsqueeze(0)
+        print(f"Warning: {img_path} not found. Creating proxy image.")
+        return Image.fromarray((np.random.rand(64, 64, 3) * 255).astype(np.uint8))
+    return Image.open(img_path)
 
 def main():
     parser = argparse.ArgumentParser(description="Dual-Image SR Inference & Agentic Evaluation")
@@ -71,20 +68,46 @@ def main():
 
     # Load inputs
     print(f"\nInputs: {args.lr1} and {args.lr2}")
-    lr1_tensor = process_image(args.lr1).to(device)
-    lr2_tensor = process_image(args.lr2).to(device)
+    img1 = process_image(args.lr1)
+    img2 = process_image(args.lr2)
 
-    # Inference
-    print("\nRunning Agentic Dual-Attention Transformer (ADAT)...")
-    with torch.no_grad():
-        hr_output = model(lr1_tensor, lr2_tensor)
+    transform = transforms.Compose([transforms.ToTensor()])
 
-    print(f"Output shape: {hr_output.shape}")
+    is_color = img1.mode == 'RGB' or (hasattr(img1, 'getbands') and len(img1.getbands()) >= 3)
+    if is_color:
+        img1_rgb = img1.convert('RGB')
+        img2_rgb = img2.convert('RGB')
+        y1, cb1, cr1 = img1_rgb.convert('YCbCr').split()
+        y2, cb2, cr2 = img2_rgb.convert('YCbCr').split()
 
-    # Save output image with SatelliteEnhancer
-    hr_output_clamped = torch.clamp(hr_output, 0, 1)
-    from enhancer import SatelliteEnhancer
-    pil_hr, _ = SatelliteEnhancer.enhance(hr_output_clamped, stretch=True, clahe=True, sharpen=True)
+        lr1_tensor = transform(y1).unsqueeze(0).to(device)
+        lr2_tensor = transform(y2).unsqueeze(0).to(device)
+
+        print("\nRunning Agentic Dual-Attention Transformer (ADAT) on Luminance channel...")
+        with torch.no_grad():
+            hr_output = model(lr1_tensor, lr2_tensor)
+            hr_output_clamped = torch.clamp(hr_output, 0, 1)
+
+        hr_y_np = (hr_output_clamped.squeeze().cpu().numpy() * 255.0).astype(np.uint8)
+        hr_y_pil = Image.fromarray(hr_y_np)
+        cb_hr = cb1.resize(hr_y_pil.size, Image.BICUBIC)
+        cr_hr = cr1.resize(hr_y_pil.size, Image.BICUBIC)
+        pil_hr = Image.merge('YCbCr', (hr_y_pil, cb_hr, cr_hr)).convert('RGB')
+        pil_hr, _ = SatelliteEnhancer.enhance_color(pil_hr, stretch=False, clahe=False, sharpen=True, sharp_strength=0.6)
+    else:
+        lr1_img = img1.convert('L')
+        lr2_img = img2.convert('L')
+        lr1_tensor = transform(lr1_img).unsqueeze(0).to(device)
+        lr2_tensor = transform(lr2_img).unsqueeze(0).to(device)
+
+        print("\nRunning Agentic Dual-Attention Transformer (ADAT)...")
+        with torch.no_grad():
+            hr_output = model(lr1_tensor, lr2_tensor)
+            hr_output_clamped = torch.clamp(hr_output, 0, 1)
+
+        pil_hr, _ = SatelliteEnhancer.enhance(hr_output_clamped, stretch=True, clahe=True, sharpen=True)
+
+    print(f"Output size: {pil_hr.size}")
     pil_hr.save(args.output)
     print(f"Enhanced HR image saved to: {args.output}")
 
