@@ -1280,7 +1280,7 @@
             <p class="app-header__subtitle">Cross-Attention Transformer Fusion & Multi-Agent Quality Evaluation across Dual-Image and Multi-Frame Architectures</p>
             <div class="header-badges">
                 <span class="badge badge--emerald"><span class="badge__dot"></span>ADAT — Dual-Image SR</span>
-                <span class="badge badge--indigo"><span class="badge__dot"></span>AMST — Multi-Frame SR</span>
+                <!-- <span class="badge badge--indigo"><span class="badge__dot"></span>AMST — Multi-Frame SR</span> -->
             </div>
         </header>
 
@@ -1293,13 +1293,13 @@
                     <span class="model-tab__desc">Dual-Image (2 feeds)</span>
                 </span>
             </button>
-            <button class="model-tab" data-model="amst" id="tab-amst">
+            <!-- <button class="model-tab" data-model="amst" id="tab-amst">
                 <span class="model-tab__icon">🌐</span>
                 <span class="model-tab__info">
                     <span class="model-tab__name">AMST Model</span>
                     <span class="model-tab__desc">Multi-Frame (up to 9)</span>
                 </span>
-            </button>
+            </button> -->
         </div>
 
         <!-- ═══════════════ ALERT BANNER ═══════════════ -->
@@ -1657,10 +1657,10 @@
             hideAlert();
             resultsBlock.style.display = 'none';
 
-            tabAdat.classList.toggle('model-tab--active', model === 'adat');
-            tabAmst.classList.toggle('model-tab--active', model === 'amst');
-            panelAdat.classList.toggle('model-panel--active', model === 'adat');
-            panelAmst.classList.toggle('model-panel--active', model === 'amst');
+            if (tabAdat) tabAdat.classList.toggle('model-tab--active', model === 'adat');
+            if (tabAmst) tabAmst.classList.toggle('model-tab--active', model === 'amst');
+            if (panelAdat) panelAdat.classList.toggle('model-panel--active', model === 'adat');
+            if (panelAmst) panelAmst.classList.toggle('model-panel--active', model === 'amst');
 
             if (model === 'adat') {
                 uploadTitle.textContent = 'Dual Satellite Feed Upload';
@@ -1671,8 +1671,8 @@
             }
         }
 
-        tabAdat.addEventListener('click', () => switchModel('adat'));
-        tabAmst.addEventListener('click', () => switchModel('amst'));
+        if (tabAdat) tabAdat.addEventListener('click', () => switchModel('adat'));
+        if (tabAmst) tabAmst.addEventListener('click', () => switchModel('amst'));
 
         // ── ADAT Drop Zone Handlers ──
         function setupDualDropZone(dz, fileInput, previewEl, rmBtn, emojiId, titleId, hintId, infoId, fnameId, fsizeId, channel) {
@@ -1968,8 +1968,8 @@
                 confidenceFill.style.width = conf + '%';
 
                 finishLoading();
-                btnAdat.disabled = false;
-                btnAmst.disabled = false;
+                if (btnAdat) btnAdat.disabled = false;
+                if (btnAmst) btnAmst.disabled = false;
 
                 resultsBlock.style.display = 'grid';
                 scanLine.style.display = 'block';
@@ -1980,8 +1980,8 @@
         function handleError(msg) {
             showAlert(msg);
             finishLoading();
-            btnAdat.disabled = !(adatFile1 && adatFile2);
-            btnAmst.disabled = amstFiles.length < 2;
+            if (btnAdat) btnAdat.disabled = !(adatFile1 && adatFile2);
+            if (btnAmst) btnAmst.disabled = amstFiles.length < 2;
         }
 
         // ── ADAT Submit ──
@@ -2032,50 +2032,52 @@
         });
 
         // ── AMST Submit ──
-        btnAmst.addEventListener('click', () => {
-            if (amstFiles.length < 2) return;
-            startLoading();
-            btnAmst.disabled = true;
+        if (btnAmst) {
+            btnAmst.addEventListener('click', () => {
+                if (amstFiles.length < 2) return;
+                startLoading();
+                btnAmst.disabled = true;
 
-            const fd = new FormData();
-            amstFiles.forEach((f, i) => fd.append('frames', f));
+                const fd = new FormData();
+                amstFiles.forEach((f, i) => fd.append('frames', f));
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/super-resolve-multi', true);
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/super-resolve-multi', true);
 
-            xhr.upload.addEventListener('progress', e => {
-                if (e.lengthComputable) {
-                    const p = Math.round((e.loaded / e.total) * 30);
-                    progressBar.style.width = p + '%';
-                    progressPct.textContent = p;
-                    progressLabel.textContent = 'TRANSMITTING MULTI-FRAME SEQUENCE…';
-                }
-            });
-
-            let procTimer = null;
-            xhr.upload.addEventListener('load', () => {
-                progressBar.style.width = '30%';
-                progressPct.textContent = '30';
-                progressLabel.textContent = 'ALIGNING TEMPORAL FRAMES…';
-                procTimer = runProgressAnimation(progressPct, progressBar, progressLabel);
-            });
-
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4) {
-                    if (procTimer) clearInterval(procTimer);
-                    if (xhr.status === 200) {
-                        try { displayResults(JSON.parse(xhr.responseText)); }
-                        catch (e) { handleError('Error parsing response: ' + e.message); }
-                    } else {
-                        let msg = 'Multi-frame synthesis failed.';
-                        try { const d = JSON.parse(xhr.responseText); if (d.error) msg = d.error; } catch (e) {}
-                        handleError(msg);
+                xhr.upload.addEventListener('progress', e => {
+                    if (e.lengthComputable) {
+                        const p = Math.round((e.loaded / e.total) * 30);
+                        progressBar.style.width = p + '%';
+                        progressPct.textContent = p;
+                        progressLabel.textContent = 'TRANSMITTING MULTI-FRAME SEQUENCE…';
                     }
-                }
-            };
+                });
 
-            xhr.send(fd);
-        });
+                let procTimer = null;
+                xhr.upload.addEventListener('load', () => {
+                    progressBar.style.width = '30%';
+                    progressPct.textContent = '30';
+                    progressLabel.textContent = 'ALIGNING TEMPORAL FRAMES…';
+                    procTimer = runProgressAnimation(progressPct, progressBar, progressLabel);
+                });
+
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === 4) {
+                        if (procTimer) clearInterval(procTimer);
+                        if (xhr.status === 200) {
+                            try { displayResults(JSON.parse(xhr.responseText)); }
+                            catch (e) { handleError('Error parsing response: ' + e.message); }
+                        } else {
+                            let msg = 'Multi-frame synthesis failed.';
+                            try { const d = JSON.parse(xhr.responseText); if (d.error) msg = d.error; } catch (e) {}
+                            handleError(msg);
+                        }
+                    }
+                };
+
+                xhr.send(fd);
+            });
+        }
 
     })();
     </script>
