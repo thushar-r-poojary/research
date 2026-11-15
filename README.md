@@ -93,7 +93,7 @@ Launch the Flask web server:
 ```bash
 python app.py
 ```
-Open **`http://127.0.0.1:5000`** in your browser.
+Open **`http://127.0.0.1:5050`** in your browser (or customize with `PORT=5000 python app.py`).
 - Click **"Load Sample Images"** to load pre-registered satellite captures.
 - Click **"Super-Resolve"** to run inference, view the split-slider before/after comparison, and inspect the Agentic Evaluation report.
 

@@ -22,6 +22,7 @@ app = Flask(__name__, template_folder='templates')
 def check_images_same(img1_pil, img2_pil):
     """
     Validates whether Image 1 and Image 2 are matching low-resolution feeds of the same scene.
+    
     Returns (is_same: bool, ssim_score: float, message: str)
     """
     img1_resized = img1_pil.convert('RGB').resize((128, 128))
@@ -400,4 +401,6 @@ def super_resolve_multi():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    port = int(os.environ.get("PORT", 5050))
+    print(f"Starting Dual-Image SR Web App on http://127.0.0.1:{port} ...")
+    app.run(host='0.0.0.0', port=port, debug=False)

@@ -3,7 +3,8 @@ import requests
 import json
 
 def test_dashboard_endpoint():
-    url = "http://127.0.0.1:5000/super-resolve"
+    port = int(os.environ.get("PORT", 5050))
+    url = f"http://127.0.0.1:{port}/super-resolve"
     lr1_path = "sample_lr1.png"
     lr2_path = "sample_lr2.png"
 
