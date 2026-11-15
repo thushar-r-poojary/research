@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Satellite Super-Resolution Lab — ADAT & AMST Models</title>
-    <meta name="description" content="Advanced Dual-Image and Multi-Frame Satellite Super-Resolution using ADAT and AMST Transformer models with Agentic AI Quality Evaluation.">
+    <title>Satellite Super-Resolution Lab — ADAT Dual-Image Model</title>
+    <meta name="description" content="Advanced Dual-Image Satellite Super-Resolution using ADAT Transformer model with Agentic AI Quality Evaluation.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════════════
@@ -1277,14 +1277,14 @@
                 <div class="app-header__logo-icon">🛰️</div>
             </div>
             <h1 class="app-header__title">Satellite Super-Resolution Lab</h1>
-            <p class="app-header__subtitle">Cross-Attention Transformer Fusion & Multi-Agent Quality Evaluation across Dual-Image and Multi-Frame Architectures</p>
+            <p class="app-header__subtitle">Cross-Attention Transformer Fusion & Multi-Agent Quality Evaluation for Dual-Image Satellite Feeds</p>
             <div class="header-badges">
                 <span class="badge badge--emerald"><span class="badge__dot"></span>ADAT — Dual-Image SR</span>
-                <!-- <span class="badge badge--indigo"><span class="badge__dot"></span>AMST — Multi-Frame SR</span> -->
             </div>
         </header>
 
-        <!-- ═══════════════ MODEL SELECTOR ═══════════════ -->
+        <!-- ═══════════════ MODEL SELECTOR (Commented Out) ═══════════════ -->
+        <!--
         <div class="model-selector" id="model-selector">
             <button class="model-tab model-tab--active" data-model="adat" id="tab-adat">
                 <span class="model-tab__icon">🔬</span>
@@ -1293,14 +1293,15 @@
                     <span class="model-tab__desc">Dual-Image (2 feeds)</span>
                 </span>
             </button>
-            <!-- <button class="model-tab" data-model="amst" id="tab-amst">
+            <button class="model-tab" data-model="amst" id="tab-amst">
                 <span class="model-tab__icon">🌐</span>
                 <span class="model-tab__info">
                     <span class="model-tab__name">AMST Model</span>
                     <span class="model-tab__desc">Multi-Frame (up to 9)</span>
                 </span>
-            </button> -->
+            </button>
         </div>
+        -->
 
         <!-- ═══════════════ ALERT BANNER ═══════════════ -->
         <div class="alert-banner alert-banner--error hidden" id="alert-banner">
@@ -1380,7 +1381,8 @@
                     </div>
                 </div>
 
-                <!-- ═══════ AMST Panel ═══════ -->
+                <!-- ═══════ AMST Panel (Commented Out) ═══════ -->
+                <!--
                 <div class="model-panel" id="panel-amst">
                     <div class="upload-grid upload-grid--single">
                         <div class="drop-zone" id="dz-multi" style="min-height: 180px;">
@@ -1404,6 +1406,7 @@
                         </button>
                     </div>
                 </div>
+                -->
             </div>
 
             <!-- RIGHT: Telemetry / Status -->
