@@ -1732,20 +1732,22 @@
         setupDualDropZone(dzLr1, fileLr1, previewLr1, $('rm-lr1'), 'emoji-lr1', 'title-lr1', 'hint-lr1', 'info-lr1', 'fname-lr1', 'fsize-lr1', 1);
         setupDualDropZone(dzLr2, fileLr2, previewLr2, $('rm-lr2'), 'emoji-lr2', 'title-lr2', 'hint-lr2', 'info-lr2', 'fname-lr2', 'fsize-lr2', 2);
 
-        // ── AMST Multi-Frame Handlers ──
-        dzMulti.addEventListener('click', () => fileMulti.click());
-        fileMulti.addEventListener('click', e => e.stopPropagation());
-        dzMulti.addEventListener('dragover', e => { e.preventDefault(); dzMulti.classList.add('dragover'); });
-        dzMulti.addEventListener('dragleave', () => dzMulti.classList.remove('dragover'));
-        dzMulti.addEventListener('drop', e => {
-            e.preventDefault();
-            dzMulti.classList.remove('dragover');
-            addMultiFiles(e.dataTransfer.files);
-        });
-        fileMulti.addEventListener('change', () => {
-            addMultiFiles(fileMulti.files);
-            fileMulti.value = '';
-        });
+        // ── AMST Multi-Frame Handlers (Guarded) ──
+        if (dzMulti && fileMulti) {
+            dzMulti.addEventListener('click', () => fileMulti.click());
+            fileMulti.addEventListener('click', e => e.stopPropagation());
+            dzMulti.addEventListener('dragover', e => { e.preventDefault(); dzMulti.classList.add('dragover'); });
+            dzMulti.addEventListener('dragleave', () => dzMulti.classList.remove('dragover'));
+            dzMulti.addEventListener('drop', e => {
+                e.preventDefault();
+                dzMulti.classList.remove('dragover');
+                addMultiFiles(e.dataTransfer.files);
+            });
+            fileMulti.addEventListener('change', () => {
+                addMultiFiles(fileMulti.files);
+                fileMulti.value = '';
+            });
+        }
 
         function addMultiFiles(fileListObj) {
             hideAlert();
@@ -1875,14 +1877,18 @@
         }
 
         // ── Copy Path ──
-        btnCopyPath.addEventListener('click', () => {
-            const txt = valLocalPath.textContent;
-            navigator.clipboard.writeText(txt).then(() => {
-                const span = btnCopyPath.querySelector('span');
-                span.textContent = 'Copied!';
-                setTimeout(() => { span.textContent = 'Copy'; }, 2000);
+        if (btnCopyPath) {
+            btnCopyPath.addEventListener('click', () => {
+                const txt = valLocalPath.textContent;
+                navigator.clipboard.writeText(txt).then(() => {
+                    const span = btnCopyPath.querySelector('span');
+                    if (span) {
+                        span.textContent = 'Copied!';
+                        setTimeout(() => { span.textContent = 'Copy'; }, 2000);
+                    }
+                });
             });
-        });
+        }
 
         // ── Processing Pipeline ──
         function runProgressAnimation(pctEl, barEl, labelEl) {
@@ -1988,51 +1994,53 @@
         }
 
         // ── ADAT Submit ──
-        btnAdat.addEventListener('click', () => {
-            if (!adatFile1 || !adatFile2) return;
-            startLoading();
-            btnAdat.disabled = true;
+        if (btnAdat) {
+            btnAdat.addEventListener('click', () => {
+                if (!adatFile1 || !adatFile2) return;
+                startLoading();
+                btnAdat.disabled = true;
 
-            const fd = new FormData();
-            fd.append('lr1', adatFile1);
-            fd.append('lr2', adatFile2);
+                const fd = new FormData();
+                fd.append('lr1', adatFile1);
+                fd.append('lr2', adatFile2);
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/super-resolve', true);
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/super-resolve', true);
 
-            xhr.upload.addEventListener('progress', e => {
-                if (e.lengthComputable) {
-                    const p = Math.round((e.loaded / e.total) * 30);
-                    progressBar.style.width = p + '%';
-                    progressPct.textContent = p;
-                    progressLabel.textContent = 'TRANSMITTING SATELLITE FEEDS…';
-                }
-            });
-
-            let procTimer = null;
-            xhr.upload.addEventListener('load', () => {
-                progressBar.style.width = '30%';
-                progressPct.textContent = '30';
-                progressLabel.textContent = 'VALIDATING & CO-ALIGNING SUB-PIXEL GRIDS…';
-                procTimer = runProgressAnimation(progressPct, progressBar, progressLabel);
-            });
-
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4) {
-                    if (procTimer) clearInterval(procTimer);
-                    if (xhr.status === 200) {
-                        try { displayResults(JSON.parse(xhr.responseText)); }
-                        catch (e) { handleError('Error parsing response: ' + e.message); }
-                    } else {
-                        let msg = 'Synthesis failed.';
-                        try { const d = JSON.parse(xhr.responseText); if (d.error) msg = d.error; } catch (e) {}
-                        handleError(msg);
+                xhr.upload.addEventListener('progress', e => {
+                    if (e.lengthComputable) {
+                        const p = Math.round((e.loaded / e.total) * 30);
+                        progressBar.style.width = p + '%';
+                        progressPct.textContent = p;
+                        progressLabel.textContent = 'TRANSMITTING SATELLITE FEEDS…';
                     }
-                }
-            };
+                });
 
-            xhr.send(fd);
-        });
+                let procTimer = null;
+                xhr.upload.addEventListener('load', () => {
+                    progressBar.style.width = '30%';
+                    progressPct.textContent = '30';
+                    progressLabel.textContent = 'VALIDATING & CO-ALIGNING SUB-PIXEL GRIDS…';
+                    procTimer = runProgressAnimation(progressPct, progressBar, progressLabel);
+                });
+
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === 4) {
+                        if (procTimer) clearInterval(procTimer);
+                        if (xhr.status === 200) {
+                            try { displayResults(JSON.parse(xhr.responseText)); }
+                            catch (e) { handleError('Error parsing response: ' + e.message); }
+                        } else {
+                            let msg = 'Synthesis failed.';
+                            try { const d = JSON.parse(xhr.responseText); if (d.error) msg = d.error; } catch (e) {}
+                            handleError(msg);
+                        }
+                    }
+                };
+
+                xhr.send(fd);
+            });
+        }
 
         // ── AMST Submit ──
         if (btnAmst) {
